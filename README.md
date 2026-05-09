@@ -1,67 +1,98 @@
-# 🚀 VojoLabs | Automação de Infraestrutura AWS
+# 🚀 Template de Infraestrutura Vojolabs
 
-Bem-vindo ao gerador oficial de repositórios de infraestrutura da **VojoLabs**! Este template foi criado para padronizar o provisionamento de recursos AWS, garantindo que todo novo projeto nasça com a estrutura correta e as melhores práticas de DevOps.
+Este repositório contém um template para infraestrutura como código (IaC) utilizando Terraform para provisionar recursos na AWS. O template é estruturado para suportar múltiplos ambientes (desenvolvimento e produção) e pode ser facilmente customizado para diferentes projetos. 🌟
 
----
+## 📁 Estrutura do Projeto
 
-## 🛠️ Como Gerar um Novo Repositório
+```text
+template-infra-vojolabs/
+├── README.md                 # Este arquivo 📖
+├── infra/
+│   ├── main.tf               # Arquivo principal do Terraform (a ser preenchido) ⚙️
+│   ├── outputs.tf            # Saídas do Terraform (a ser preenchido) 📤
+│   ├── provider.tf           # Configuração do provedor AWS ☁️
+│   ├── variables.tf          # Definição de variáveis 🔧
+│   └── env/
+│       ├── dev/
+│       │   └── terraform.tfvars  # Variáveis para ambiente de desenvolvimento 🧪
+│       └── prod/
+│           └── terraform.tfvars  # Variáveis para ambiente de produção 🚀
+```
 
-Para evitar configurações manuais e erros de padronização, utilizamos um fluxo automatizado via **GitHub Issues**. Siga os passos abaixo:
+## ✅ Pré-requisitos
 
-### 1. Inicie o Processo
+Antes de usar este template, certifique-se de ter instalado:
 
-❌ Não utilize o botão verde "Use this template". Em vez disso:
+- [Terraform](https://www.terraform.io/downloads.html) (versão 1.0 ou superior) 🛠️
+- [AWS CLI](https://aws.amazon.com/cli/) configurado com credenciais válidas 🔑
+- Acesso à conta AWS com permissões para provisionar recursos 🔒
 
-* Vá na aba [**Issues**](https://github.com/VojoLabs/template-infra-aws/issues).
-* Clique no botão **New Issue**.
-* Localize o formulário **"🚀 Novo Projeto de Infraestrutura AWS"** e clique em **Get Started**.
+## 🛠️ Como Usar o Template
 
-### 2. Preencha o Formulário
+### 1. ⚡ Configuração Inicial
 
-O formulário solicitará as informações essenciais para o novo projeto:
+1. Inicie seu desenvolvimento sempre com um branch 'feature' 🌿
 
-* **Nome do Repositório:** Use apenas letras minúsculas e hífens.
-  * *substitua* `<nome-do-projeto>-<servico-provisionado>`
-  * *Exemplo:* `projeto-vojolabs-aws-lambda-s3`
-* **Padrão de Nomenclatura:** Tente sempre iniciar com o nome do cliente ou projeto interno seguido da tecnologia principal.
+  ```bash
+   git branch -m feature/<seu branch>
+   ```
 
-❌ Não substitua o nome da action por completo, ela precisa **obrigatóriamente** iniciar com *'Template'*
-O formulário virá desse assim: *"Template para Infraestrutura AWS - [Novo Projeto]"*
-**Configure (opcional) somente o texto entre colchetes []**
+   O Actions do github executará automaticamente após seu push a partir desta branch. 🤖
 
-* *Exemplo:* `Template para Infraestrutura AWS - Projeto VojoLabs`
+### 2. 🔧 Configuração das Variáveis
 
-### 3. Acompanhamento e Entrega
+As variáveis essenciais estão definidas em `variables.tf` e devem ser configuradas nos arquivos `terraform.tfvars` de cada ambiente.
 
-Após clicar em **Submit new issue**:
+#### Variáveis Essenciais
 
-1. ⏳ **O Bot entrará em ação:** Um comentário será feito automaticamente confirmando o recebimento.
-2. ⚙️ **Provisionamento:** O GitHub Actions criará o repositório dentro da organização **VojoLabs**, configurará as branches `main` e `develop`
-*Lembre-se de realizar o desenvolvimento a partir da branch develop com uma feature/branch*
-3. ✅ **Conclusão:** A issue será fechada e você receberá o link direto para o seu novo repositório, pronto para uso.
+- `environment`: Nome do ambiente (ex: "dev", "prod") 🌍
+- `project_name`: Nome do projeto (ex: "my-app") 📝
+- `aws_region`: Região da AWS (ex: "sa-east-1") 🌎
 
----
+#### Configuração para Desenvolvimento: 🧪
 
-## 🤝 Boas Práticas e Comportamento
+Edite o arquivo `env/dev/terraform.tfvars`:
 
-Para manter nosso ecossistema saudável e profissional, pedimos atenção aos seguintes pontos:
+```terraform
+environment = "dev"
+project_name = "nome-do-seu-projeto"
+aws_region = "sa-east-1"
+```
 
-* **Nomenclatura Limpa:** Nomes de repositórios claros ajudam na manutenção e no faturamento da nuvem. Evite nomes genéricos como `teste-aws`.
-* **Segurança Primeiro:** Este template é público. Nunca insira credenciais, chaves IAM ou segredos diretamente no formulário da issue. Use o **AWS Secrets Manager** ou **GitHub Secrets** no repositório final.
-* **Mentalidade de Mentoria:** Se você está criando este repositório para um novo membro da VojoLabs, utilize o link gerado para guiá-lo no primeiro `git pull`.
-* **Erros na Automação:** Caso o bot retorne um erro (ex: nome de repositório já existente), leia atentamente o log e tente novamente com os ajustes necessários.
+#### Configuração para Produção: 🚀
 
----
+Edite o arquivo `env/prod/terraform.tfvars`:
 
-## 🏗️ Estrutura Entregue
+```terraform
+environment = "prod"
+project_name = "nome-do-seu-projeto"
+aws_region = "sa-east-1"
+```
 
-O novo repositório será gerado com
+### 3. 🏗️ Desenvolvimento da Infraestrutura
 
-* ✅ Estrutura de pastas padronizada para Terraform.
-* ✅ Branch `main` (produção) e `develop` (desenvolvimento).
-* ✅ README técnico.
+1. **Edite `main.tf`**: Adicione os recursos da AWS que deseja provisionar. Por exemplo: ⚙️
 
----
+   ```terraform
+   resource "aws_s3_bucket" "example" {
+     bucket = "${var.project_name}-${var.environment}-bucket"
 
-> **Dúvidas?** > Entre em contato com o time de **Cloud Infrastructure** ou abra uma discussão na nossa comunidade.
-> **VojoLabs - Da jornada ao destino.**
+     tags = {
+       Environment = var.environment
+       Project     = var.project_name
+     }
+   }
+   ```
+
+2. **Edite `outputs.tf`**: Defina as saídas que serão exibidas após o deploy. Por exemplo: 📤
+
+   ```terraform
+   output "bucket_name" {
+     description = "Nome do bucket S3 criado"
+     value       = aws_s3_bucket.example.bucket
+   }
+   ```
+
+## 🆘 Suporte
+
+Para dúvidas ou problemas, consulte a documentação oficial do Terraform ou entre em contato com a equipe Vojolabs. 💬'
