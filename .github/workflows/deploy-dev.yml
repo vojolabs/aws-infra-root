@@ -10,10 +10,12 @@ permissions:
   contents: read
 
 jobs:
-  terraform:
+  terraform-deploy:
     uses: ./.github/workflows/terraform.yml
     with:
       environment: dev
-      project_name: "rocket-project"
-      aws-assume-role-arn: "arn:aws:iam::<id_aws>:role/<role_name>"
+      project_name: "cidade-refugio-backend"
+      # No primeiro deploy (para criar a role), deixe esta linha vazia ou comentada:
+      # aws-assume-role-arn: "" 
       aws-region: "sa-east-1"
+    secrets: inherit # CRITÍCO: Isso passa as AWS_ACCESS_KEY para o workflow filho

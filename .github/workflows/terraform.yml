@@ -1,21 +1,33 @@
-name: "IAM Bootstrap (Initial Setup)"
+name: "Terraform Execution"
 
 on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch: # Permite rodar manualmente se precisar
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      project_name:
+        type: string
+        required: true
+      aws-assume-role-arn:
+        type: string
+        required: false # Mudamos para false para permitir o primeiro deploy com keys
+      aws-region:
+        type: string
+        required: true
+      destroy:
+        type: boolean
+        required: false
+        default: false
 
 jobs:
-  bootstrap:
-    name: "Create Central Role"
+  terraform:
+    name: "Terraform Run"
     runs-on: ubuntu-latest
     
-    # IMPORTANTE: Aqui usamos o método legado (Secrets) 
-    # porque a Role ainda não existe para usarmos OIDC.
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: "us-east-1"
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout Code
@@ -26,12 +38,27 @@ jobs:
         with:
           terraform_version: 1.8.3
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # Se o ARN for enviado, ele usa OIDC. 
+          # Se não for, ele tentará usar as chaves das Secrets automaticamente.
+          role-to-assume: ${{ inputs.aws-assume-role-arn }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.aws-region }}
+
       - name: Terraform Init
         run: |
-          cd infra-base && \
-          terraform init
+          cd infra && \
+          terraform init -backend-config="region=${{ inputs.aws-region }}"
 
-      - name: Terraform Apply
+      - name: Terraform Apply/Destroy
         run: |
-          cd infra-base && \
-          terraform apply -auto-approve
+          cd infra && \
+          terraform workspace select -or-create ${{ inputs.environment }} && \
+          if [ "${{ inputs.destroy }}" = "true" ]; then
+            terraform destroy -auto-approve -var="environment=${{ inputs.environment }}"
+          else
+            terraform apply -auto-approve -var="environment=${{ inputs.environment }}"
+          fi
