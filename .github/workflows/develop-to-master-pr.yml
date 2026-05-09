@@ -1,0 +1,44 @@
+name: "[DEVELOP TO MASTER] PR aberto automaticamente"
+
+on:
+  push:
+    branches:
+      - 'develop'
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Criar Pull Request para Master
+        id: create-pr
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pullRequests = await github.rest.pulls.list({
+              owner,
+              repo,
+              head: 'develop',
+              base: 'master',
+              state: 'open'
+            });
+
+            if (pullRequests.data.length === 0) {
+              const newPullRequest = await github.rest.pulls.create({
+                owner,
+                repo,
+                head: 'develop',
+                base: 'master',
+                title: '[DEVELOP TO MASTER] PR aberto automaticamente',
+                body: 'Este Pull Request foi criado automaticamente para integrar as mudanças de develop para master.'
+              });
+              console.log(`Pull Request para master criado: ${newPullRequest.data.html_url}`);
+            } else {
+              console.log('Já existe um Pull Request aberto de develop para master. Nenhum novo foi criado.');
+            }

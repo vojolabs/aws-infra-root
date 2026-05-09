@@ -1,0 +1,93 @@
+name: "Terraform Workflow"
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      project_name:
+        type: string
+        required: true
+      aws-assume-role-arn:
+        type: string
+        required: true
+      aws-region:
+        type: string
+        required: true
+      destroy:
+        type: boolean
+        required: false
+        default: false
+        description: "Define se o comando 'terraform destroy' deve ser executado (true para destruir, false para plan/apply)"
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      issues: write
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.aws-assume-role-arn }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Terraform Init
+        run: |
+          cd infra && \
+          terraform init \
+            -backend-config="region=${{ inputs.aws-region }}"
+
+      - name: Terraform Validate
+        run: cd infra && terraform validate
+
+      - name: Terraform Destroy
+        if: inputs.destroy == true
+        id: terraform-destroy
+        run: |
+          cd infra && \
+          terraform workspace select -or-create ${{ inputs.environment }} && \ 
+          terraform destroy \
+            -var="environment=${{ inputs.environment }}" \
+            -var-file="envs/${{ inputs.environment }}/terraform.tfvars" \ 
+            -auto-approve \
+            -lock=false
+
+      - name: Terraform Plan
+        if: inputs.destroy == false
+        id: terraform-plan
+        run: |
+          cd infra && \
+          terraform workspace select -or-create ${{ inputs.environment }} && \
+          terraform plan \
+            -var="environment=${{ inputs.environment }}" \
+            -var-file="envs/${{ inputs.environment }}/terraform.tfvars" \
+            -out="${{ inputs.environment }}.plan" \
+            -lock=false
+
+      - name: Terraform Apply
+        if: inputs.destroy == false
+        id: terraform-apply
+        run: |
+          cd infra && \
+          terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }} && \
+          terraform apply \
+            -lock=false \
+            "${{ inputs.environment }}.plan"
+

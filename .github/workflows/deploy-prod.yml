@@ -1,0 +1,19 @@
+name: "[PROD] deploy"
+
+on: 
+  push:
+    branches:
+      - master
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    uses: ./.github/workflows/terraform.yml
+    with:
+      environment: prod
+      project_name: "rocket-project"
+      aws-assume-role-arn: "arn:aws:iam::<id_aws>:role/<role_name>"
+      aws-region: "sa-east-1"
