@@ -1,39 +1,24 @@
-name: "Terraform Workflow"
+name: "IAM Bootstrap (Initial Setup)"
 
 on:
-  workflow_call:
-    inputs:
-      environment:
-        type: string
-        required: true
-      project_name:
-        type: string
-        required: true
-      aws-assume-role-arn:
-        type: string
-        required: true
-      aws-region:
-        type: string
-        required: true
-      destroy:
-        type: boolean
-        required: false
-        default: false
-        description: "Define se o comando 'terraform destroy' deve ser executado (true para destruir, false para plan/apply)"
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Permite rodar manualmente se precisar
 
 jobs:
-  terraform:
+  bootstrap:
+    name: "Create Central Role"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    permissions:
-      issues: write
-      id-token: write
-      contents: read
+    
+    # IMPORTANTE: Aqui usamos o método legado (Secrets) 
+    # porque a Role ainda não existe para usarmos OIDC.
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: "us-east-1"
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
@@ -41,53 +26,12 @@ jobs:
         with:
           terraform_version: 1.8.3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ inputs.aws-assume-role-arn }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: ${{ inputs.aws-region }}
-
       - name: Terraform Init
         run: |
-          cd infra && \
-          terraform init \
-            -backend-config="region=${{ inputs.aws-region }}"
-
-      - name: Terraform Validate
-        run: cd infra && terraform validate
-
-      - name: Terraform Destroy
-        if: inputs.destroy == true
-        id: terraform-destroy
-        run: |
-          cd infra && \
-          terraform workspace select -or-create ${{ inputs.environment }} && \ 
-          terraform destroy \
-            -var="environment=${{ inputs.environment }}" \
-            -var-file="envs/${{ inputs.environment }}/terraform.tfvars" \ 
-            -auto-approve \
-            -lock=false
-
-      - name: Terraform Plan
-        if: inputs.destroy == false
-        id: terraform-plan
-        run: |
-          cd infra && \
-          terraform workspace select -or-create ${{ inputs.environment }} && \
-          terraform plan \
-            -var="environment=${{ inputs.environment }}" \
-            -var-file="envs/${{ inputs.environment }}/terraform.tfvars" \
-            -out="${{ inputs.environment }}.plan" \
-            -lock=false
+          cd infra-base && \
+          terraform init
 
       - name: Terraform Apply
-        if: inputs.destroy == false
-        id: terraform-apply
         run: |
-          cd infra && \
-          terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }} && \
-          terraform apply \
-            -lock=false \
-            "${{ inputs.environment }}.plan"
-
+          cd infra-base && \
+          terraform apply -auto-approve
