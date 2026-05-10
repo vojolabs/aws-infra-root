@@ -15,7 +15,6 @@ jobs:
     with:
       environment: dev
       project_name: "cidade-refugio-backend"
-      # No primeiro deploy (para criar a role), deixe esta linha vazia ou comentada:
-      # aws-assume-role-arn: "" 
+      aws-assume-role-arn: "arn:aws:iam::164599051832:role/github-actions-central-role" 
       aws-region: "sa-east-1"
-    secrets: inherit # CRITÍCO: Isso passa as AWS_ACCESS_KEY para o workflow filho
+    secrets: inherit

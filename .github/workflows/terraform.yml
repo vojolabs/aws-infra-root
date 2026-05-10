@@ -17,7 +17,7 @@ on:
         required: true
       id_aws_account_dev:
         type: string
-        required: false
+        required: true
       id_aws_account_prod:
         type: string
         required: false
