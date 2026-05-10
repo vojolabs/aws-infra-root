@@ -5,9 +5,6 @@ environment  = "prod"
 project_name = "cidade-refugio"
 aws_region   = "sa-east-1"
 
-###########################################################################################
-# GITHUB OIDC CONFIGURATION
-###########################################################################################
-
 github_repository = "vojolabs/projeto-cdr-backend"
+id_aws_account_prod  = "9109729782782"
 

@@ -1,4 +1,4 @@
-name: "[DEVELOP TO MASTER] PR aberto automaticamente"
+name: "[DEVELOP TO MAIN] PR aberto automaticamente"
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Criar Pull Request para Master
+      - name: Criar Pull Request para main
         id: create-pr
         uses: actions/github-script@v6
         with:
@@ -25,7 +25,7 @@ jobs:
               owner,
               repo,
               head: 'develop',
-              base: 'master',
+              base: 'main',
               state: 'open'
             });
 
@@ -34,11 +34,11 @@ jobs:
                 owner,
                 repo,
                 head: 'develop',
-                base: 'master',
-                title: '[DEVELOP TO MASTER] PR aberto automaticamente',
-                body: 'Este Pull Request foi criado automaticamente para integrar as mudanças de develop para master.'
+                base: 'main',
+                title: '[DEVELOP TO MAIN] PR aberto automaticamente',
+                body: 'Este Pull Request foi criado automaticamente para integrar as mudanças de develop para main.'
               });
-              console.log(`Pull Request para master criado: ${newPullRequest.data.html_url}`);
+              console.log(`Pull Request para main criado: ${newPullRequest.data.html_url}`);
             } else {
-              console.log('Já existe um Pull Request aberto de develop para master. Nenhum novo foi criado.');
+              console.log('Já existe um Pull Request aberto de develop para main. Nenhum novo foi criado.');
             }

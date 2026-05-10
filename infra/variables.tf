@@ -15,3 +15,11 @@ variable "project_name" {
 variable "aws_region" {
   type = string
 }
+
+variable "id_aws_account_dev" {
+  type = string
+}
+
+variable "id_aws_account_prod" {
+  type = string
+}

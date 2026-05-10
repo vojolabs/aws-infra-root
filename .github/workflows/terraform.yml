@@ -15,6 +15,12 @@ on:
       aws-region:
         type: string
         required: true
+      id_aws_account_dev:
+        type: string
+        required: true
+      id_aws_account_prod:
+        type: string
+        required: true
       destroy:
         type: boolean
         required: false
@@ -28,7 +34,9 @@ jobs:
       TF_VAR_aws_region: ${{ inputs.aws-region }} 
       TF_VAR_project_name: ${{ inputs.project_name }}
       TF_VAR_environment: ${{ inputs.environment }}
-    
+      TF_VAR_id_aws_account_dev: ${{ inputs.id_aws_account_dev }}
+      TF_VAR_id_aws_account_prod: ${{ inputs.id_aws_account_prod }}
+
     permissions:
       id-token: write
       contents: read
@@ -54,8 +62,18 @@ jobs:
 
       - name: Terraform Init
         run: |
+          if [ "${{ inputs.environment }}" == "prod" ]; then
+            ACCOUNT_ID="${{ inputs.id_aws_account_prod }}" 
+          else
+            ACCOUNT_ID="${{ inputs.id_aws_account_dev }}"
+          fi
+
           cd infra && \
-          terraform init -backend-config="region=${{ inputs.aws-region }}"
+            -backend-config="cidade-refugio-backend-terraform-state-${ACCOUNT_ID}" \
+            -backend-config="key=${{ inputs.project_name }}/terraform.tfstate" \
+            -backend-config="region=${{ inputs.aws-region }}" \
+            -backend-config="dynamodb_table=cidade-refugio-backend-terraform-state-lock" \
+            -backend-config="encrypt=true"
 
       - name: Terraform Apply/Destroy
         run: |
