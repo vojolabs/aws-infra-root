@@ -10,12 +10,14 @@ permissions:
   contents: read
 
 jobs:
-  terraform:
+  terraform-deploy:
     uses: ./.github/workflows/terraform.yml
     with:
       environment: prod
       id_aws_account_prod: "9109729782782"
       project_name: "cidade-refugio-backend"
-      # aws-assume-role-arn: "" 
+      aws-statefile-s3-bucket: "cidade-refugio-backend-terraform-state-9109729782782"
+      # Preencha o ARN do role se usar OIDC, ou deixe comentado para usar as keys:
+      # aws-assume-role-arn: "arn:aws:iam::9109729782782:role/github-actions-central-role"
       aws-region: "sa-east-1"
-    secrets: inherit 
+    secrets: inherit
