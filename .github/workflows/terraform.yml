@@ -17,10 +17,10 @@ on:
         required: true
       id_aws_account_dev:
         type: string
-        required: true
+        required: false
       id_aws_account_prod:
         type: string
-        required: true
+        required: false
       destroy:
         type: boolean
         required: false
