@@ -1,4 +1,4 @@
-name: "Terraform Workflow"
+name: "Terraform Execution"
 
 on:
   workflow_call:
@@ -11,29 +11,38 @@ on:
         required: true
       aws-assume-role-arn:
         type: string
-        required: true
+        required: false 
       aws-region:
         type: string
         required: true
+      id_aws_account_dev:
+        type: string
+        required: true
+      id_aws_account_prod:
+        type: string
+        required: false
       destroy:
         type: boolean
         required: false
         default: false
-        description: "Define se o comando 'terraform destroy' deve ser executado (true para destruir, false para plan/apply)"
 
 jobs:
   terraform:
+    name: "Terraform Run"
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
+    env:
+      TF_VAR_aws_region: ${{ inputs.aws-region }} 
+      TF_VAR_project_name: ${{ inputs.project_name }}
+      TF_VAR_environment: ${{ inputs.environment }}
+      TF_VAR_id_aws_account_dev: ${{ inputs.id_aws_account_dev }}
+      TF_VAR_id_aws_account_prod: ${{ inputs.id_aws_account_prod }}
+
     permissions:
-      issues: write
       id-token: write
       contents: read
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup Terraform
@@ -41,53 +50,41 @@ jobs:
         with:
           terraform_version: 1.8.3
 
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          # Se o ARN for enviado, ele usa OIDC. 
+          # Se não for, ele tentará usar as chaves das Secrets automaticamente.
           role-to-assume: ${{ inputs.aws-assume-role-arn }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
 
       - name: Terraform Init
         run: |
+          if [ "${{ inputs.environment }}" == "prod" ]; then
+            ACCOUNT_ID="${{ inputs.id_aws_account_prod }}" 
+          else
+            ACCOUNT_ID="${{ inputs.id_aws_account_dev }}"
+          fi
+
           cd infra && \
-          terraform init \
-            -backend-config="region=${{ inputs.aws-region }}"
+            -backend-config="cidade-refugio-backend-terraform-state-${ACCOUNT_ID}" \
+            -backend-config="key=${{ inputs.project_name }}/terraform.tfstate" \
+            -backend-config="region=${{ inputs.aws-region }}" \
+            -backend-config="dynamodb_table=cidade-refugio-backend-terraform-state-lock" \
+            -backend-config="encrypt=true"
 
-      - name: Terraform Validate
-        run: cd infra && terraform validate
-
-      - name: Terraform Destroy
-        if: inputs.destroy == true
-        id: terraform-destroy
-        run: |
-          cd infra && \
-          terraform workspace select -or-create ${{ inputs.environment }} && \ 
-          terraform destroy \
-            -var="environment=${{ inputs.environment }}" \
-            -var-file="envs/${{ inputs.environment }}/terraform.tfvars" \ 
-            -auto-approve \
-            -lock=false
-
-      - name: Terraform Plan
-        if: inputs.destroy == false
-        id: terraform-plan
+      - name: Terraform Apply/Destroy
         run: |
           cd infra && \
           terraform workspace select -or-create ${{ inputs.environment }} && \
-          terraform plan \
-            -var="environment=${{ inputs.environment }}" \
-            -var-file="envs/${{ inputs.environment }}/terraform.tfvars" \
-            -out="${{ inputs.environment }}.plan" \
-            -lock=false
-
-      - name: Terraform Apply
-        if: inputs.destroy == false
-        id: terraform-apply
-        run: |
-          cd infra && \
-          terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }} && \
-          terraform apply \
-            -lock=false \
-            "${{ inputs.environment }}.plan"
-
+          if [ "${{ inputs.destroy }}" = "true" ]; then
+            terraform destroy -auto-approve \
+              -var="environment=${{ inputs.environment }}" \
+              -var="aws_region=${{ inputs.aws-region }}"
+          else
+            terraform apply -auto-approve \
+              -var="environment=${{ inputs.environment }}" \
+              -var="aws_region=${{ inputs.aws-region }}"
+          fi

@@ -10,10 +10,11 @@ permissions:
   contents: read
 
 jobs:
-  terraform:
+  terraform-deploy:
     uses: ./.github/workflows/terraform.yml
     with:
       environment: dev
-      project_name: "rocket-project"
-      aws-assume-role-arn: "arn:aws:iam::<id_aws>:role/<role_name>"
+      project_name: "cidade-refugio-backend"
+      aws-assume-role-arn: "arn:aws:iam::164599051832:role/github-actions-central-role" 
       aws-region: "sa-east-1"
+    secrets: inherit
