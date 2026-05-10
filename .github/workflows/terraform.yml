@@ -9,9 +9,6 @@ on:
       project_name:
         type: string
         required: true
-      aws-assume-role-arn:
-        type: string
-        required: false 
       aws-region:
         type: string
         required: true
@@ -41,7 +38,6 @@ jobs:
       TF_VAR_id_aws_account_prod: ${{ inputs.id_aws_account_prod }}
 
     permissions:
-      id-token: write
       contents: read
 
     steps:
@@ -56,9 +52,6 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # Se o ARN for enviado, ele usa OIDC. 
-          # Se não for, ele tentará usar as chaves das Secrets automaticamente.
-          role-to-assume: ${{ inputs.aws-assume-role-arn }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
