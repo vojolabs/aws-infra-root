@@ -3,7 +3,7 @@ name: "[PROD] deploy"
 on: 
   push:
     branches:
-      - master
+      - main
 
 permissions:
   id-token: write
@@ -15,7 +15,6 @@ jobs:
     with:
       environment: prod
       project_name: "cidade-refugio-backend"
-      # No primeiro deploy (para criar a role), deixe esta linha vazia ou comentada:
       # aws-assume-role-arn: "" 
       aws-region: "sa-east-1"
-    secrets: inherit # CRITÍCO: Isso passa as AWS_ACCESS_KEY para o workflow filho
+    secrets: inherit 
