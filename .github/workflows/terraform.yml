@@ -75,6 +75,17 @@ jobs:
             -backend-config="dynamodb_table=cidade-refugio-backend-terraform-state-lock" \
             -backend-config="encrypt=true"
 
+
+      - name: Terraform Import
+        run: |
+          cd infra
+          terraform import aws_s3_bucket.terraform_state cidade-refugio-backend-terraform-state-164599051832 || true
+          
+          terraform import aws_dynamodb_table.terraform_locks cidade-refugio-backend-terraform-state-lock || true
+          
+          terraform import aws_s3_bucket_versioning.enabled cidade-refugio-backend-terraform-state-164599051832 || true
+          terraform import aws_s3_bucket_public_access_block.public_access cidade-refugio-backend-terraform-state-164599051832 || true
+
       - name: Terraform Apply/Destroy
         run: |
           cd infra && \
