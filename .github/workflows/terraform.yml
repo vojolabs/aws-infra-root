@@ -21,6 +21,9 @@ on:
       id_aws_account_prod:
         type: string
         required: false
+      aws-statefile-s3-bucket:
+        type: string
+        required: true
       destroy:
         type: boolean
         required: false
@@ -62,14 +65,8 @@ jobs:
 
       - name: Terraform Init
         run: |
-          if [ "${{ inputs.environment }}" == "prod" ]; then
-            ACCOUNT_ID="${{ inputs.id_aws_account_prod }}" 
-          else
-            ACCOUNT_ID="${{ inputs.id_aws_account_dev }}"
-          fi
-
           cd infra && terraform init\
-            -backend-config="bucket=cidade-refugio-backend-terraform-state-${ACCOUNT_ID}" \
+            -backend-config="bucket=${{ inputs.aws-statefile-s3-bucket }}" \
             -backend-config="key=${{ inputs.project_name }}/terraform.tfstate" \
             -backend-config="region=${{ inputs.aws-region }}" \
             -backend-config="dynamodb_table=cidade-refugio-backend-terraform-state-lock" \
