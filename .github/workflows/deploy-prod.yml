@@ -14,6 +14,7 @@ jobs:
     uses: ./.github/workflows/terraform.yml
     with:
       environment: prod
+      id_aws_account_prod: "9109729782782"
       project_name: "cidade-refugio-backend"
       # aws-assume-role-arn: "" 
       aws-region: "sa-east-1"
