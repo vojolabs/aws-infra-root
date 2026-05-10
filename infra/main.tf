@@ -32,6 +32,21 @@ resource "aws_iam_role" "github_actions_role" {
   assume_role_policy = data.aws_iam_policy_document.github_actions_assume_role.json
 }
 
+resource "aws_iam_role_policy" "allow_oidc_creation" {
+  name = "AllowOIDCCreation"
+  role = "github-actions-central-role"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "iam:CreateOpenIDConnectProvider"
+        Effect   = "Allow"
+        Resource = "arn:aws:iam::164599051832:oidc-provider/token.actions.githubusercontent.com"
+      },
+    ]
+  })
+}
 
 resource "aws_iam_role_policy_attachment" "github_actions_attach" {
   role       = aws_iam_role.github_actions_role.name
