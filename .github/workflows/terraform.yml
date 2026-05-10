@@ -20,7 +20,7 @@ on:
         required: true
       id_aws_account_prod:
         type: string
-        required: false
+        required: true
       destroy:
         type: boolean
         required: false
