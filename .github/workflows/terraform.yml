@@ -24,6 +24,9 @@ jobs:
   terraform:
     name: "Terraform Run"
     runs-on: ubuntu-latest
+    env:
+      TF_VAR_aws_region: ${{ inputs.aws-region }} 
+      TF_VAR_environment: ${{ inputs.environment }}
     
     permissions:
       id-token: write
@@ -58,7 +61,11 @@ jobs:
           cd infra && \
           terraform workspace select -or-create ${{ inputs.environment }} && \
           if [ "${{ inputs.destroy }}" = "true" ]; then
-            terraform destroy -auto-approve -var="environment=${{ inputs.environment }}"
+            terraform destroy -auto-approve \
+              -var="environment=${{ inputs.environment }}" \
+              -var="aws_region=${{ inputs.aws-region }}"
           else
-            terraform apply -auto-approve -var="environment=${{ inputs.environment }}"
+            terraform apply -auto-approve \
+              -var="environment=${{ inputs.environment }}" \
+              -var="aws_region=${{ inputs.aws-region }}"
           fi
