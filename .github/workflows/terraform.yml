@@ -68,8 +68,8 @@ jobs:
             ACCOUNT_ID="${{ inputs.id_aws_account_dev }}"
           fi
 
-          cd infra && \
-            -backend-config="cidade-refugio-backend-terraform-state-${ACCOUNT_ID}" \
+          cd infra && terraform init\
+            -backend-config="bucket=cidade-refugio-backend-terraform-state-${ACCOUNT_ID}" \
             -backend-config="key=${{ inputs.project_name }}/terraform.tfstate" \
             -backend-config="region=${{ inputs.aws-region }}" \
             -backend-config="dynamodb_table=cidade-refugio-backend-terraform-state-lock" \
