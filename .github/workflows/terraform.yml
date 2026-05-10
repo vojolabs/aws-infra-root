@@ -8,10 +8,10 @@ on:
         required: true
       project_name:
         type: string
-        required: true
+        required: false
       aws-assume-role-arn:
         type: string
-        required: false # Mudamos para false para permitir o primeiro deploy com keys
+        required: false 
       aws-region:
         type: string
         required: true
