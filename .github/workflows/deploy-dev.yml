@@ -6,7 +6,6 @@ on:
       - develop
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
@@ -14,7 +13,8 @@ jobs:
     uses: ./.github/workflows/terraform.yml
     with:
       environment: dev
+      id_aws_account_dev: "164599051832"
       project_name: "cidade-refugio-backend"
-      aws-assume-role-arn: "arn:aws:iam::164599051832:role/github-actions-central-role" 
+      aws-statefile-s3-bucket: "cidade-refugio-backend-terraform-state-164599051832"
       aws-region: "sa-east-1"
     secrets: inherit

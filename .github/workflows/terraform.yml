@@ -9,18 +9,18 @@ on:
       project_name:
         type: string
         required: true
-      aws-assume-role-arn:
-        type: string
-        required: false 
       aws-region:
         type: string
         required: true
       id_aws_account_dev:
         type: string
-        required: true
+        required: false
       id_aws_account_prod:
         type: string
         required: false
+      aws-statefile-s3-bucket:
+        type: string
+        required: true
       destroy:
         type: boolean
         required: false
@@ -38,7 +38,6 @@ jobs:
       TF_VAR_id_aws_account_prod: ${{ inputs.id_aws_account_prod }}
 
     permissions:
-      id-token: write
       contents: read
 
     steps:
@@ -53,27 +52,29 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # Se o ARN for enviado, ele usa OIDC. 
-          # Se não for, ele tentará usar as chaves das Secrets automaticamente.
-          role-to-assume: ${{ inputs.aws-assume-role-arn }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
 
       - name: Terraform Init
         run: |
-          if [ "${{ inputs.environment }}" == "prod" ]; then
-            ACCOUNT_ID="${{ inputs.id_aws_account_prod }}" 
-          else
-            ACCOUNT_ID="${{ inputs.id_aws_account_dev }}"
-          fi
-
-          cd infra && \
-            -backend-config="cidade-refugio-backend-terraform-state-${ACCOUNT_ID}" \
+          cd infra && terraform init\
+            -backend-config="bucket=${{ inputs.aws-statefile-s3-bucket }}" \
             -backend-config="key=${{ inputs.project_name }}/terraform.tfstate" \
             -backend-config="region=${{ inputs.aws-region }}" \
             -backend-config="dynamodb_table=cidade-refugio-backend-terraform-state-lock" \
             -backend-config="encrypt=true"
+
+
+      #- name: Terraform Import
+      #  run: |
+      #    cd infra
+      #    terraform import aws_s3_bucket.terraform_state cidade-refugio-backend-terraform-state-164599051832 || true
+      #    
+      #    terraform import aws_dynamodb_table.terraform_locks cidade-refugio-backend-terraform-state-lock || true
+      #    
+      #    terraform import aws_s3_bucket_versioning.enabled cidade-refugio-backend-terraform-state-164599051832 || true
+      #    terraform import aws_s3_bucket_public_access_block.public_access cidade-refugio-backend-terraform-state-164599051832 || true
 
       - name: Terraform Apply/Destroy
         run: |
